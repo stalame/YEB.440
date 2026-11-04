@@ -1,0 +1,17 @@
+# png files and image folder
+*.png
+*/img
+
+
+# excel files
+*.xlsx
+
+# Jupyter Notebooks for now
+*.ipynb
+
+# python files that I don't want to commit yet
+/Sahkonkulutuksen_seuranta.py
+/Wind_farm_optimization.py
+
+*.env
+
