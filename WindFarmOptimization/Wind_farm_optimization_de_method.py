@@ -299,7 +299,7 @@ for (x, y), label in zip(coords, labels):
     ax.text(
         x + 40,
         y + 40,
-        f"{label}\n({x},{y})",
+        f"{label}\n({x:.2f},{y:.2f})",
         fontsize=10
     )
 
