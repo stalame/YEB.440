@@ -51,7 +51,7 @@ k = 0.075            # wake decay constant
 rho = 1.225          # kg/m³
 hours_year = 8760
 
-bounds = [(R, 2000-R)]*10
+bounds = [(R, 2000-R)]*10 # The ensure that part of the turbine doesn't go outside the boundary
 min_spacing = 4*D
 
 
