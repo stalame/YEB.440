@@ -1,7 +1,7 @@
 """
 YEB.440 Voimalaitokset ja kytketyt energiajärjestelmät
 Harjoitustyö OSA 4: Tuulipuiston optimointi
-Amelia Stalter, 151193060 ja Aliisa Impola, 
+Amelia Stalter, 151193060
 """
 import numpy as np
 import matplotlib.pyplot as plt

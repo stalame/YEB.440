@@ -1,7 +1,7 @@
 """
 YEB.440 Harjoitustyö osa 4: tuulipuiston layoutin optimointi
 Amelia Stalter 151193060
-Optimizing wind farm wind turbine placement using genetic algorithm
+Optimizing wind farm wind turbine placement using differential evolution
 """
 from scipy.optimize import differential_evolution
 import numpy as np
@@ -35,10 +35,10 @@ turbines = np.array([
 ])
 
 # --------------------------------------------------
-# Turbine parameters
+# Other parameters
 # --------------------------------------------------
 
-rho = 1.225          # kg/m³
+# turbine parameters
 Cp = 0.45
 D = 120.0            # rotor diameter [m]
 R = D / 2
@@ -48,7 +48,12 @@ hub_height = 100     # m
 Ct = 0.8             # thrust coefficient
 k = 0.075            # wake decay constant
 
+rho = 1.225          # kg/m³
 hours_year = 8760
+
+bounds = [(R, 2000-R)]*10
+min_spacing = 4*D
+
 
 # --------------------------------------------------
 # Power calculation
@@ -85,7 +90,7 @@ def rotate_to_wind(coords, wind_dir_deg):
 # Jensen wake model
 # --------------------------------------------------
 
-def effective_speeds(coords, free_speed):
+def effective_speeds(coords, free_speed, wind_dir_deg):
 
     rotated = rotate_to_wind(coords, wind_dir_deg)
 
@@ -131,49 +136,104 @@ def effective_speeds(coords, free_speed):
 # Energy without wake
 # --------------------------------------------------
 
-energy_no_wake = 0
+def energy_no_wake(turbines):
+    energy_no_wake = 0
 
-for d in wind_data.values():
+    for d in wind_data.values():
 
-    p = turbine_power(d["v"])
+        p = turbine_power(d["v"])
 
-    energy_no_wake += (
-        len(turbines)
-        * p
-        * d["freq"]
-        * hours_year
-    )
+        energy_no_wake += (
+            len(turbines)
+            * p
+            * d["freq"]
+            * hours_year
+        )
+    
+    return energy_no_wake
 
 # --------------------------------------------------
 # Energy with wake
 # --------------------------------------------------
 
-energy_wake = 0
+def energy_wake(turbines):
 
-for name, d in wind_data.items():
+    energy_wake = 0
 
-    wind_dir_deg = d["dir"]
+    for name, d in wind_data.items():
 
-    velocities = effective_speeds(
-        turbines,
-        d["v"]
-    )
+        velocities = effective_speeds(
+            turbines,
+            d["v"],
+            d["dir"]
+        )
 
-    powers = turbine_power(velocities)
+        powers = turbine_power(velocities)
 
-    energy_wake += (
-        np.sum(powers)
-        * d["freq"]
-        * hours_year
-    )
+        energy_wake += (
+            np.sum(powers)
+            * d["freq"]
+            * hours_year
+        )
+
+    return energy_wake
+
+def spacing_penalty(turbines):
+
+    penalty = 0
+
+    for i in range(len(turbines)):
+        for j in range(i+1,len(turbines)):
+
+            dist = np.linalg.norm(
+                turbines[i]-turbines[j]
+            )
+
+            if dist < 480:
+                penalty += 1e12
+
+    return penalty
+
+def objective(vars):
+
+    turbines_test = np.array([
+        [vars[0], vars[1]],
+        [vars[2], vars[3]],
+        [vars[4], vars[5]],
+        [vars[6], vars[7]],
+        [vars[8], vars[9]]
+    ])
+
+    penalty = spacing_penalty(turbines_test)
+
+    return -energy_wake(turbines_test) + penalty
+
+# --------------------------------------------------
+# Run optimization
+# --------------------------------------------------
+
+result = differential_evolution(
+    objective,
+    bounds,
+    maxiter=500,
+    popsize=20,
+    seed=42
+)
 
 # --------------------------------------------------
 # Results
 # --------------------------------------------------
 
+coords = result.x.reshape((5,2))
+
+print(coords)
+
+optimized_energy = energy_wake(coords)
+base_energy = energy_no_wake(coords)
+
 loss_percent = (
-    (energy_no_wake - energy_wake)
-    / energy_no_wake
+    (base_energy - optimized_energy)
+    / base_energy
     * 100
 )
 
@@ -182,12 +242,12 @@ print("-" * 40)
 
 print(
     f"Annual production without wake:"
-    f" {energy_no_wake/1e6:.2f} MWh"
+    f" {base_energy/1e6:.2f} MWh"
 )
 
 print(
     f"Annual production with wake:"
-    f" {energy_wake/1e6:.2f} MWh"
+    f" {optimized_energy/1e6:.2f} MWh"
 )
 
 print(
@@ -201,17 +261,17 @@ print(
 
 print("\nProduction per turbine:")
 
-for idx in range(len(turbines)):
+for idx in range(len(coords)):
 
     annual = 0
 
     for name, d in wind_data.items():
 
-        wind_dir_deg = d["dir"]
 
         v_eff = effective_speeds(
-            turbines,
-            d["v"]
+            coords,
+            d["v"],
+            d["dir"]
         )[idx]
 
         annual += (
@@ -226,14 +286,14 @@ for idx in range(len(turbines)):
     )
 
 # --------------------------------------------------
-# Plot the new coordinates
+# Plot the new [optimized] coordinates
 # --------------------------------------------------
 
 fig, ax = plt.subplots(figsize=(8, 8))
 
 labels = ["T1", "T2", "T3", "T4", "T5"]
 
-for (x, y), label in zip(turbines, labels):
+for (x, y), label in zip(coords, labels):
     ax.scatter(x, y, s=120, marker='o')
 
     ax.text(
