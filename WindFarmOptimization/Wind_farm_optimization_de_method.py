@@ -178,6 +178,10 @@ def energy_wake(turbines):
 
     return energy_wake
 
+#--------------------------------------------------
+# Optimization functions
+#--------------------------------------------------
+
 def spacing_penalty(turbines):
 
     penalty = 0
@@ -208,7 +212,7 @@ def objective(vars):
 
     return -energy_wake(turbines_test) + penalty
 
-# --------------------------------------------------
+#--------------------------------------------------
 # Run optimization
 # --------------------------------------------------
 
