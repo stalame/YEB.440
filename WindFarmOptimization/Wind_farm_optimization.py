@@ -1,7 +1,12 @@
 """
 YEB.440 Voimalaitokset ja kytketyt energiajärjestelmät
 Harjoitustyö OSA 4: Tuulipuiston optimointi
-Amelia Stalter, 151193060
+Amelia Stalter 151193060
+Tällä ohjelmalla voi manuaalisesti optimoida tuulipuiston layoutia muuttamalla tuuliturbiinien koordinaatteja.
+Ohjelma laskee tuulipuiston vuotuisen tuotannon Wake-ilmiötä huomioiden ja ilman kyseisen ilmiön vaikutusta.
+Lisäksi ohjelma laskee Wake-ilmiön aiheuttamat tuotantohäviöt prosentteina ja tuuliturbiinikohtaisen tuotannon
+jokaiselle tuuliturbiinille. 
+Lopuksi ohjelma piirtää tuulipuiston layoutin xy-koordinaatistoon.
 """
 import numpy as np
 import matplotlib.pyplot as plt
